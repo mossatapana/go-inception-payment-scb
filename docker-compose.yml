@@ -1,0 +1,12 @@
+# Use postgres/example user/password credentials
+version: '3.1'
+
+services:
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_PASSWORD: example
+      POSTGRES_USERNAME: postgres
+    volumes:
+      - ./db-script/init.sql:/docker-entrypoint-initdb.d/init.sql
