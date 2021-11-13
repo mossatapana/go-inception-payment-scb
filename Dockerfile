@@ -23,6 +23,6 @@ COPY --from=build /go-inception-payment-scb /go-inception-payment-scb
 
 EXPOSE 8080
 
-USER nonroot:nonroot
+USER root:root
 
 ENTRYPOINT ["/go-inception-payment-scb"]
