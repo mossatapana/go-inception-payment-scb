@@ -1,0 +1,4 @@
+omise:
+  public_key: "pkey_test_5mci4nahnjn8p8byryi"
+  secret_key: "skey_test_5mci4naho2s633rwwmd"
+  source_type: "internet_banking_scb"

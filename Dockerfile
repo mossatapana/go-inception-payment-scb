@@ -18,6 +18,7 @@ FROM gcr.io/distroless/base-debian10
 
 WORKDIR /
 
+COPY --from=build /go/src/go-inception-payment-scb/config /config
 COPY --from=build /go-inception-payment-scb /go-inception-payment-scb
 
 EXPOSE 8080
