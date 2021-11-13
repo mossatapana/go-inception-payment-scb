@@ -14,6 +14,7 @@ type CreatePaymentRequest struct {
 }
 
 type CreatePaymentResponse struct {
+	ID      int64  `json:"id,omitempty"`
 	Message string `json:"message"`
 }
 

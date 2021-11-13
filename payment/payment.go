@@ -3,6 +3,7 @@ package payment
 import (
 	"fmt"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	"github.com/omise/omise-go"
 	"github.com/omise/omise-go/operations"
 	"go-inception-payment-scb/model"
@@ -27,11 +28,13 @@ func NewPayment(client *omise.Client, paymentRepo *repository.PaymentRepo) *Paym
 }
 
 func (p PaymentController) CreatePayment(c echo.Context) error {
+	res := model.CreatePaymentResponse{}
 	tn := time.Now()
 	paymentRequest := model.CreatePaymentRequest{}
 	if err := c.Bind(&paymentRequest); err != nil {
-		fmt.Errorf("bind req error: %v\n", err)
-		return err
+		log.Errorf("bind req error: %v\n", err)
+		res.Message = "request error"
+		return c.JSON(http.StatusBadRequest, res)
 	}
 
 	createToken := operations.CreateToken{
@@ -45,8 +48,9 @@ func (p PaymentController) CreatePayment(c echo.Context) error {
 	}
 	token, err := p.createToken(&createToken)
 	if err != nil {
-		fmt.Errorf("create token error: %v\n", err)
-		return err
+		log.Errorf("create token error: %v\n", err)
+		res.Message = "unable to processed request"
+		return c.JSON(http.StatusInternalServerError, res)
 	}
 
 	createCharge := &operations.CreateCharge{
@@ -57,8 +61,9 @@ func (p PaymentController) CreatePayment(c echo.Context) error {
 
 	var charge omise.Charge
 	if err := p.client.Do(&charge, createCharge); err != nil {
-		fmt.Errorf("create token error: %v\n", err)
-		return err
+		log.Errorf("create token error: %v\n", err)
+		res.Message = "unable to processed request"
+		return c.JSON(http.StatusInternalServerError, res)
 	}
 
 	data := model.PaymentORM{
@@ -82,14 +87,15 @@ func (p PaymentController) CreatePayment(c echo.Context) error {
 		data.Description = ""
 	}
 
-	err = p.paymentRepo.Insert(data)
+	id, err := p.paymentRepo.Insert(data)
 	if err != nil {
-		fmt.Errorf("insert payment record error: %v\n", err)
-		return err
+		log.Errorf("insert payment record error: %v\n", err)
+		res.Message = "unable to processed request"
+		return c.JSON(http.StatusServiceUnavailable, res)
 	}
 
-	res := model.CreatePaymentResponse{Message: "success"}
-
+	res.Message = "success"
+	res.ID = id
 	return c.JSON(http.StatusOK, res)
 }
 
