@@ -58,7 +58,30 @@ func (pr PaymentRepo) UpdateStatus(id int, status string) error {
 	return nil
 }
 
-func (pr PaymentRepo) GetByID(id int) (model.PaymentORM, error) {
-	var payment model.PaymentORM
-	return payment, nil
+func (pr PaymentRepo) GetByID(id int) ([]model.PaymentORM, error) {
+	var payments []model.PaymentORM
+	rows, err := pr.db.Query("SELECT * FROM payment WHERE id = ?", id)
+	if err != nil {
+		log.Errorf("query payment where id = %v is error %v\n", id, err)
+		return payments, err
+	}
+
+	for rows.Next() {
+		var payment model.PaymentORM
+		if err := rows.Scan(&payment.ID, &payment.Amount, &payment.Card, &payment.Currency, &payment.Status,
+			&payment.Description, &payment.Capture, &payment.Authorized, &payment.Reversed, &payment.Paid,
+			&payment.Transaction, &payment.OffsiteType, &payment.CreatedAt, &payment.UpdatedAt); err != nil {
+			log.Errorf("loop through query rows got error %v\n", err)
+			return payments, err
+		}
+		payments = append(payments, payment)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Errorf("result query is error %v\n", err)
+		return payments, err
+	}
+
+	log.Printf("get query rows success\n")
+	return payments, nil
 }

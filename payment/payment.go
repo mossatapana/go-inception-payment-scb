@@ -9,6 +9,7 @@ import (
 	"go-inception-payment-scb/model"
 	"go-inception-payment-scb/repository"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -71,6 +72,7 @@ func (p PaymentController) CreatePayment(c echo.Context) error {
 		Card:        charge.Card.ID,
 		Currency:    charge.Currency,
 		Status:      string(charge.Status),
+		Description: charge.Description,
 		Capture:     charge.Capture,
 		Authorized:  charge.Authorized,
 		Reversed:    charge.Reversed,
@@ -79,12 +81,6 @@ func (p PaymentController) CreatePayment(c echo.Context) error {
 		OffsiteType: string(charge.Offsite),
 		CreatedAt:   tn,
 		UpdatedAt:   tn,
-	}
-
-	if charge.Description != nil {
-		data.Description = *charge.Description
-	} else {
-		data.Description = ""
 	}
 
 	id, err := p.paymentRepo.Insert(data)
@@ -104,9 +100,25 @@ func (p PaymentController) UpdateTransactionStatus(c echo.Context) error {
 }
 
 func (p PaymentController) GetTransactionStatus(c echo.Context) error {
+	res := model.GetPaymentTransactionResponse{}
 	id := c.Param("id")
-	fmt.Println("got id:", id)
-	return c.JSON(http.StatusOK, fmt.Sprintf("update transaction status by id %s", id))
+	idNo, err := strconv.Atoi(id)
+	if err != nil {
+		log.Errorf("convert string id to int is error: %s\n", err)
+		res.Message = "request error"
+		return c.JSON(http.StatusBadRequest, res)
+	}
+
+	transaction, err := p.paymentRepo.GetByID(idNo)
+	if err != nil {
+		log.Errorf("get payment transaction error: %s\n", err)
+		res.Message = "unable to processed request"
+		return c.JSON(http.StatusInternalServerError, res)
+	}
+
+	res.Message = "success"
+	res.PaymentORM = transaction
+	return c.JSON(http.StatusOK, res)
 }
 
 func (p PaymentController) createToken(createToken *operations.CreateToken) (*omise.Token, error) {

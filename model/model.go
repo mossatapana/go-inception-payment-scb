@@ -24,7 +24,7 @@ type PaymentORM struct {
 	Card        string    `json:"card"`
 	Currency    string    `json:"currency"`
 	Status      string    `json:"status"`
-	Description string    `json:"description"`
+	Description *string   `json:"description"`
 	Capture     bool      `json:"capture"`
 	Authorized  bool      `json:"authorized"`
 	Reversed    bool      `json:"reversed"`
@@ -36,4 +36,9 @@ type PaymentORM struct {
 }
 
 type UpdatePaymentStatusRequest struct {
+}
+
+type GetPaymentTransactionResponse struct {
+	PaymentORM []PaymentORM `json:"transaction,omitempty"`
+	Message    string       `json:"message"`
 }

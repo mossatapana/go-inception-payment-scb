@@ -13,15 +13,15 @@ import (
 )
 
 func main() {
-	os.Remove("sqlite-database.db")
-	fmt.Println("creating sqlite-database.db file...")
-
-	file, err := os.Create("sqlite-database.db")
-	if err != nil {
-		log.Fatalf("create file sqlite-database.db error %s\n", err)
+	if _, err := os.Stat("sqlite-database.db"); os.IsNotExist(err) {
+		fmt.Println("file sqlite-database.db does not exist creating...")
+		file, err := os.Create("sqlite-database.db")
+		if err != nil {
+			log.Fatalf("create file sqlite-database.db error %s\n", err)
+		}
+		file.Close()
+		fmt.Println("sqlite-database.db has been created")
 	}
-	file.Close()
-	fmt.Println("sqlite-database.db has been created")
 
 	db, err := sql.Open("sqlite3", "./sqlite-database.db")
 	if err != nil {
@@ -49,18 +49,18 @@ func main() {
 
 	e := echo.New()
 	e.POST("/payment", paymentCtrl.CreatePayment)
-	e.PUT("/payment/status", paymentCtrl.UpdateTransactionStatus)
 	e.GET("/transaction/:id/status", paymentCtrl.GetTransactionStatus)
 	e.Logger.Fatal(e.Start(":8080"))
 }
 
 func createTable(db *sql.DB) {
-	createPaymentTableSQL := `CREATE TABLE payment (
+	createPaymentTableSQL := `CREATE TABLE IF NOT EXISTS payment (
 		"id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
 		"amount" integer,
 		"card" text,
 		"currency" text,
 		"status" text,
+		"description" text,
 		"capture" boolean,
 		"authorized" boolean,
 		"reversed" boolean,
